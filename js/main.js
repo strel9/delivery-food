@@ -1,17 +1,16 @@
 'use strict';
 
-const cartButton = document.querySelector("#cart-button");
-const modal = document.querySelector(".modal");
-const close = document.querySelector(".close");
+const cartButton = document.querySelector('#cart-button');
+const modal = document.querySelector('.modal');
+const close = document.querySelector('.close');
 const buttonAuth = document.querySelector('.button-auth');
 const modalAuth = document.querySelector('.modal-auth');
 const closeAuth = document.querySelector('.close-auth');
 const logInForm = document.querySelector('#logInForm');
 const loginInput = document.querySelector('#login');
-const passwordInput = document.querySelector('#password');
+// const passwordInput = document.querySelector('#password');
 const userName = document.querySelector('.user-name');
 const buttonOut = document.querySelector('.button-out');
-const buttonLogin = document.querySelector('.button-login');
 const cardsRestaurants = document.querySelector('.cards-restaurants');
 const containerPromo = document.querySelector('.container-promo');
 const restaurants = document.querySelector('.restaurants');
@@ -22,11 +21,17 @@ const sectionHeading = document.querySelector('.menu-section-heading');
 const cartBody = document.querySelector('.cart-body');
 const modalPricetag = document.querySelector('.modal-pricetag');
 
-let login = localStorage.getItem('sDelivery');
-
+let login = localStorage.getItem('DeliveryLogin');
 const cart = [];
 
-const getData = async function (url) {
+const loadCart = () => {
+	if (localStorage.getItem(login)) {
+		JSON.parse(localStorage.getItem(login)).forEach((item) => cart.push(item));
+	}
+};
+
+const saveCart = () => localStorage.setItem(login, JSON.stringify(cart));
+const getData = async (url) => {
 	const response = await fetch(url);
 
 	if (!response.ok) {
@@ -35,26 +40,22 @@ const getData = async function (url) {
 	return await response.json();
 };
 
-const valid = function (str) {
-	const nameReg = /^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$/;
-	return nameReg.test(str);
-};
+const valid = (str) => /^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$/.test(str);
 
-const toggleModal = function () {
-	modal.classList.toggle("is-open");
-};
+const toggleModal = () => modal.classList.toggle('is-open');
 
-function toggleModalAuth() {
+const toggleModalAuth = () => {
 	modalAuth.classList.toggle('is-open');
 	loginInput.placeholder = '';
 	loginInput.style.borderColor = '';
 };
 
-function autorized() {
-	console.log('авторизован')
-	function logOut() {
+const autorized = () => {
+	console.log('авторизован');
+	const logOut = () => {
 		login = null;
-		localStorage.removeItem('sDelivery');
+		cart.length = 0;
+		localStorage.removeItem('DeliveryLogin');
 
 		buttonAuth.style.display = '';
 		userName.style.display = '';
@@ -63,24 +64,25 @@ function autorized() {
 		buttonOut.removeEventListener('click', logOut);
 		checkAuth();
 		returnMain();
-	}
+	};
 	userName.textContent = login;
 	buttonAuth.style.display = 'none';
 	userName.style.display = 'inline';
 	buttonOut.style.display = 'flex';
 	cartButton.style.display = 'flex';
 	buttonOut.addEventListener('click', logOut);
+	loadCart();
 	// localStorage.setItem('', login);
 };
 
-function notAutorized() {
-	console.log('неавторизован')
-	function logIn(e) {
+const notAutorized = () => {
+	console.log('неавторизован');
+	const logIn = (e) => {
 		e.preventDefault();
 		if (valid(loginInput.value.trim())) {
 			// alert('введи логин');
 			login = loginInput.value;
-			localStorage.setItem('sDelivery', login);
+			localStorage.setItem('DeliveryLogin', login);
 			// console.log(login);
 			toggleModalAuth();
 			buttonAuth.removeEventListener('click', toggleModalAuth);
@@ -93,27 +95,31 @@ function notAutorized() {
 			loginInput.placeholder = 'введи логин';
 			loginInput.style.borderColor = 'red';
 			loginInput.value = '';
-
-
 		}
-
-	}
+	};
 
 	buttonAuth.addEventListener('click', toggleModalAuth);
 	closeAuth.addEventListener('click', toggleModalAuth);
 	logInForm.addEventListener('submit', logIn);
 };
 
-function checkAuth() {
+const checkAuth = () => {
 	if (login) {
-		autorized()
+		autorized();
 	} else {
-		notAutorized()
+		notAutorized();
 	}
 };
 
-function createCardRestaurants({ image, kitchen, name, price, stars, products, time_of_delivery: timeofDelivery }) {
-
+const createCardRestaurants = ({
+	image,
+	kitchen,
+	name,
+	price,
+	stars,
+	products,
+	time_of_delivery: timeofDelivery,
+}) => {
 	// console.log(restaurant)
 
 	const card = `
@@ -140,15 +146,17 @@ function createCardRestaurants({ image, kitchen, name, price, stars, products, t
 			</div>
 			</a>
 			`;
-	cardsRestaurants.insertAdjacentHTML('beforeend', card)
+	cardsRestaurants.insertAdjacentHTML('beforeend', card);
 };
 
-function createCardGood({ id, name, description, price, image }) {
+const createCardGood = ({ id, name, description, price, image }) => {
 	// console.log(goods);
 	const card = document.createElement('div');
 	// card.className = 'card';
 	card.classList.add('card');
-	card.insertAdjacentHTML('beforeend', `
+	card.insertAdjacentHTML(
+		'beforeend',
+		`
 		<img src="${image}" alt="image" class="card-image"/>
 		<div class="card-text">
 		<div class="card-heading">
@@ -166,13 +174,14 @@ function createCardGood({ id, name, description, price, image }) {
 			<strong class="card-price card-price-bold">${price} ₽</strong>
 		</div>
 		</div>
-	`);
+	`,
+	);
 
 	// console.log(card);
 	cardsMenu.insertAdjacentElement('beforeEnd', card);
 };
 
-function createSectionHeading(data) {
+const createSectionHeading = (data) => {
 	sectionHeading.textContent = '';
 	const heading = `
 	<h2 class="section-title restaurant-title">${data.name}</h2>
@@ -183,25 +192,23 @@ function createSectionHeading(data) {
 		<div class="price">От ${data.price} ₽</div>
 		<div class="category">${data.kitchen}</div>
 	</div>
-	`
-	sectionHeading.insertAdjacentHTML('beforeend', heading)
+	`;
+	sectionHeading.insertAdjacentHTML('beforeend', heading);
 };
 
-function openGoods(e) {
+const openGoods = (e) => {
 	// console.log(e.target)
 	const target = e.target;
 	const restaurant = target.closest('.card-restaurant');
 	// console.log('restaraunt: ', restaurant);
 	if (restaurant) {
 		if (login) {
-			containerPromo.classList.add('hide')
-			restaurants.classList.add('hide')
-			menu.classList.remove('hide')
+			containerPromo.classList.add('hide');
+			restaurants.classList.add('hide');
+			menu.classList.remove('hide');
 			cardsMenu.textContent = '';
 
-			getData(`./db/${restaurant.dataset.products}`).then(function (data) {
-				data.forEach(createCardGood);
-			});
+			getData(`./db/${restaurant.dataset.products}`).then((data) => data.forEach(createCardGood));
 
 			createSectionHeading(restaurant.dataset);
 
@@ -210,18 +217,18 @@ function openGoods(e) {
 			// createCardGood();
 			// createCardGood();
 		} else {
-			toggleModalAuth()
+			toggleModalAuth();
 		}
 	}
 };
 
-function returnMain() {
-	containerPromo.classList.remove('hide')
-	restaurants.classList.remove('hide')
-	menu.classList.add('hide')
+const returnMain = () => {
+	containerPromo.classList.remove('hide');
+	restaurants.classList.remove('hide');
+	menu.classList.add('hide');
 };
 
-function addToCart(e) {
+const addToCart = (e) => {
 	const target = e.target;
 	const buttonAddCart = target.closest('.button-add-cart');
 	if (buttonAddCart) {
@@ -229,66 +236,66 @@ function addToCart(e) {
 		const title = card.querySelector('.card-title-reg').textContent;
 		const cost = card.querySelector('.card-price').textContent;
 		const id = buttonAddCart.id;
-		// console.log(title, cost, id)
-
-		const food = cart.find(function (item) {
-			return item.id === id;
-		})
-		// console.log(food)
-		if (food) {
-			food.count += 1;
-		} else {
-			cart.push({
-				id,
-				title,
-				cost,
-				count: 1
-			})
-		}
-
-		console.log(cart)
+		const food = cart.find((item) => item.id === id);
+		food ? (food.count += 1) : cart.push({ id, title, cost, count: 1 });
+		saveCart();
 	}
+};
 
-}
-
-function renderCart() {
+const renderCart = () => {
 	cartBody.textContent = '';
-	cart.forEach(function ({ id, title, cost, count }) {
+	cart.forEach(({ id, title, cost, count }) => {
 		const itemCart = `
 		<div class="food-row">
 		<span class="food-name">${title}</span>
 		<strong class="food-price">${cost}</strong>
 		<div class="food-counter">
-			<button class="counter-button">-</button>
+			<button class="counter-button counter-minus" data-id=${id}>-</button>
 			<span class="counter">${count}</span>
-			<button class="counter-button">+</button>
+			<button class="counter-button counter-plus" data-id=${id}>+</button>
 		</div>
 		</div>
 	`;
 		cartBody.insertAdjacentHTML('afterbegin', itemCart);
-	})
+	});
 
-	const totalPrice = cart.reduce(function (result, item) {
-		return result + (parseFloat(item.cost)) * item.count;
-	}, 0)
+	const totalPrice = cart.reduce((result, item) => result + parseFloat(item.cost) * item.count, 0);
 
 	modalPricetag.textContent = totalPrice + ' ₽';
+};
 
-}
+const changeCount = (e) => {
+	const target = e.target;
 
-function init() {
-	getData('./db/partners.json').then(function (data) {
-		data.forEach(createCardRestaurants);
-	});
+	if (target.classList.contains('counter-button')) {
+		const food = cart.find((item) => item.id === target.dataset.id);
+		if (target.classList.contains('counter-minus')) {
+			console.log('minus');
+			food.count--;
+			if (food.count === 0) {
+				cart.splice(cart.indexOf(food), 1);
+			}
+		}
+		if (target.classList.contains('counter-plus')) {
+			food.count++;
+		}
+		renderCart();
+		saveCart();
+	}
+};
+
+const init = () => {
+	getData('./db/partners.json').then((data) => data.forEach(createCardRestaurants));
 
 	cardsRestaurants.addEventListener('click', openGoods);
 	logo.addEventListener('click', returnMain);
 	// cartButton.addEventListener("click", toggleModal);
-	cartButton.addEventListener("click", function () {
+	cartButton.addEventListener('click', () => {
 		toggleModal();
 		renderCart();
 	});
-	close.addEventListener("click", toggleModal);
+	cartBody.addEventListener('click', changeCount);
+	close.addEventListener('click', toggleModal);
 	cardsMenu.addEventListener('click', addToCart);
 
 	checkAuth();
@@ -297,7 +304,7 @@ function init() {
 		loop: true,
 		autoplay: {
 			delay: 1000,
-			// autoplay: true,
+			autoplay: false,
 		},
 		// slidesPerView : 3,
 		// direction: 'vertical',
@@ -306,8 +313,7 @@ function init() {
 			el: '.swiper-pagination',
 			dynamicBullets: true,
 		},
-	})
-
-}
+	});
+};
 
 init();
